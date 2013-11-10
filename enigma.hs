@@ -17,6 +17,7 @@ import Data.Maybe (fromJust)
 import Data.List (elemIndex)
 
 type PB_Config = String
+type Ref_Config = String
 
 data Direction = Fwd | Bwd deriving (Show, Eq)
 
@@ -25,7 +26,7 @@ data State = State
   deriving (Show)
 
 data Conf = Conf
-  { pb :: PB_Config, pin1 :: Char, pin2 :: Char, pin3 :: Char }
+  { pb :: PB_Config, refl :: Ref_Config, pin1 :: Char, pin2 :: Char, pin3 :: Char }
   deriving (Show)
 
 
@@ -50,10 +51,16 @@ rotate_rotor :: Conf -> State -> State
 rotate_rotor conf state = State 'a' 'b' 'c' -- dummy
 
 
+reflector :: Ref_Config -> Char -> Char
+reflector conf c = plugboard Bwd conf c
+
 enigma_char :: Conf -> State -> Char -> Char
 enigma_char conf state c =
   let new_state = rotate_rotor conf state
-  in (plugboard Bwd (pb conf) . (plugboard Fwd (pb conf))) c
+  in ( plugboard Bwd (pb conf)
+     . plugboard Fwd (pb conf)
+     . reflector (refl conf)
+     ) c
 
 
 enigma :: Conf -> State -> String -> String
@@ -67,7 +74,17 @@ enigma setting state (x:rest) =
 -- verify_conf :: -- need to verify the config type
 --
 -- my main program...
-run_char = enigma_char (Conf "QWERTYUIOPASDFGHJKLZXCVBNM" 'a' 'b' 'c') (State 'd' 'e' 'f')
-run = enigma (Conf "QWERTYUIOPASDFGHJKLZXCVBNM" 'a' 'b' 'c') (State 'd' 'e' 'f')
+plugs = "QWERTYUIOPASDFGHJKLZXCVBNM"
+ref_b = "YRUHQSLDPXNGOKMIEBFZCWVJAT" -- M3 B
+ref_c = "FVPJIAOYEDRZXWGCTKUQSBNMHL" -- M3 C
+
+run_char =
+  enigma_char
+  (Conf plugs ref_b 'a' 'b' 'c')
+  (State 'd' 'e' 'f')
+run =
+  enigma
+  (Conf plugs ref_b 'a' 'b' 'c') 
+  (State 'd' 'e' 'f')
 
 
