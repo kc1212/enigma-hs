@@ -12,7 +12,11 @@
 -- 11. Pass through plugboard
 -- 12. Convert to output letter
 
-type PB_Config = (String,String)
+import Data.Char (ord, chr)
+import Data.Maybe (fromJust)
+import Data.List (elemIndex)
+
+type PB_Config = String
 
 data Direction = Fwd | Bwd deriving (Show, Eq)
 
@@ -25,12 +29,21 @@ data Conf = Conf
   deriving (Show)
 
 
+charToInt :: Char -> Int
+charToInt c
+  | ((ord c) >= 65) && ((ord c) <= 90) = (ord c) - 65
+  | otherwise = error "Not a capital alphabet."
+
+
+intToChar :: Int -> Char
+intToChar x
+  | (x >= 0) && (x <= 25) = chr $ x + 65
+  | otherwise = error "Argument is not between 65 and 90"
+
+
 plugboard :: Direction -> PB_Config -> Char -> Char
-plugboard Bwd (xs1,xs2) c =
-  plugboard Fwd (xs2,xs1) c
-plugboard Fwd (s1:xs1,s2:xs2) c
-  | c == s1 = s2
-  | otherwise = plugboard Fwd (xs1,xs2) c
+plugboard Bwd conf c = ['A'..'Z'] !! (fromJust $ elemIndex c conf)
+plugboard Fwd conf c = conf !! (charToInt c)
 
 
 rotate_rotor :: Conf -> State -> State
@@ -54,6 +67,7 @@ enigma setting state (x:rest) =
 -- verify_conf :: -- need to verify the config type
 --
 -- my main program...
-run_char = enigma_char (Conf ("abcdefg","efgabc") 'a' 'b' 'c') (State 'd' 'e' 'f')
-run = enigma (Conf ("abcdefg","efgabc") 'a' 'b' 'c') (State 'd' 'e' 'f')
+run_char = enigma_char (Conf "QWERTYUIOPASDFGHJKLZXCVBNM" 'a' 'b' 'c') (State 'd' 'e' 'f')
+run = enigma (Conf "QWERTYUIOPASDFGHJKLZXCVBNM" 'a' 'b' 'c') (State 'd' 'e' 'f')
+
 
