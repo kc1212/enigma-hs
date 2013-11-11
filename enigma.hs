@@ -17,10 +17,11 @@ import Data.Maybe (fromJust)
 import Data.List (elemIndex)
 
 
-type PB_Config = String
-type Ref_Config = String
-type Rot_Config = Char
+type PB_Conf = String
+type Ref_Conf = String
+type Rot_Conf = Char
 type Rot_Loc = Char
+type Rot_Type = String
 
 data Direction = Fwd | Bwd deriving (Show, Eq)
 
@@ -31,19 +32,27 @@ data State = State
   deriving (Show)
 
 data Conf = Conf
-  { pb :: PB_Config
-  , refl :: Ref_Config
-  , pin1 :: Rot_Config
-  , pin2 :: Rot_Config
-  , pin3 :: Rot_Config }
+  { pb :: PB_Conf
+  , refl :: Ref_Conf
+  , rtype_1 :: Rot_Type
+  , rtype_2 :: Rot_Type
+  , rtype_3 :: Rot_Type
+  , ring1 :: Rot_Conf
+  , ring2 :: Rot_Conf
+  , ring3 :: Rot_Conf }
   deriving (Show)
 
+
+-- helper functions
+alphs = ['A'..'Z']
+
+rem26 :: Int -> Int
+rem26 x = rem (x+52) 26
 
 charToInt :: Char -> Int
 charToInt c
   | ((ord c) >= 65) && ((ord c) <= 90) = (ord c) - 65
   | otherwise = error "Not a capital alphabet."
-
 
 intToChar :: Int -> Char
 intToChar x
@@ -51,8 +60,13 @@ intToChar x
   | otherwise = error "Argument is not between 65 and 90"
 
 
-plugboard :: Direction -> PB_Config -> Char -> Char
-plugboard Bwd conf c = ['A'..'Z'] !! (fromJust $ elemIndex c conf)
+getIndex :: Eq a => a -> [a] -> Int
+getIndex x xs = fromJust $ elemIndex x xs
+
+
+-- enigma functions
+plugboard :: Direction -> PB_Conf -> Char -> Char
+plugboard Bwd conf c = alphs !! (getIndex c conf)
 plugboard Fwd conf c = conf !! (charToInt c)
 
 
@@ -60,12 +74,23 @@ rotate_rotor :: Conf -> State -> State
 rotate_rotor conf state = State 'a' 'b' 'c' -- dummy
 
 
-reflector :: Ref_Config -> Char -> Char
+reflector :: Ref_Conf -> Char -> Char
 reflector conf c = plugboard Bwd conf c
 
 
--- rotor :: Rot_Config -> Rot_Loc -> Char -> Char
--- rotor conf loc c = 
+rotor :: Direction -> Rot_Type -> Rot_Conf -> Rot_Loc -> Char -> Char
+rotor dir rtype ring loc c
+  | dir == Fwd =
+    intToChar (rem26 $ (charToInt fwd_f) - iloc + iring)
+  | dir == Bwd =
+    intToChar (rem26 $ (charToInt bwd_f) - iloc + iring)
+  | otherwise = error "Unknown direction"
+  where
+    ic = charToInt c
+    iloc = charToInt loc
+    iring = charToInt ring
+    fwd_f = rtype !! rem26 (ic + iloc - iring)
+    bwd_f = alphs !! getIndex (intToChar (rem26 (ic + iloc - iring))) rtype
 
 
 enigma_char :: Conf -> State -> Char -> Char
@@ -88,17 +113,25 @@ enigma setting state (x:rest) =
 -- verify_conf :: -- need to verify the config type
 --
 -- my main program...
-plugs = "QWERTYUIOPASDFGHJKLZXCVBNM"
-ref_b = "YRUHQSLDPXNGOKMIEBFZCWVJAT" -- M3 B
-ref_c = "FVPJIAOYEDRZXWGCTKUQSBNMHL" -- M3 C
+plugs    = "QWERTYUIOPASDFGHJKLZXCVBNM" -- plug locations
+ref_b    = "YRUHQSLDPXNGOKMIEBFZCWVJAT" -- M3 B reflector
+ref_c    = "FVPJIAOYEDRZXWGCTKUQSBNMHL" -- M3 C reflector
+rtypeI   = "EKMFLGDQVZNTOWYHXUSPAIBRCJ" -- rotor type I
+rtypeII  = "AJDKSIRUXBLHWTMCQGZNPYFVOE" -- rotor type II
+rtypeIII = "BDFHJLCPRTXVZNYEIWGAKMUSQO" -- rotor type III
+rtypeIV  = "ESOVPZJAYQUIRHXLNFTGKDCMWB" -- rotor type IV
+rtypeV   = "VZBRGITYUPSDNHLXAWMJQOFECK" -- rotor type V
+
 
 run_char =
   enigma_char
-  (Conf plugs ref_b 'a' 'b' 'c')
+  (Conf plugs ref_b rtypeI rtypeII rtypeIII 'a' 'b' 'c')
   (State 'd' 'e' 'f')
 run =
   enigma
-  (Conf plugs ref_b 'a' 'b' 'c') 
+  (Conf plugs ref_b rtypeI rtypeII rtypeIII 'a' 'b' 'c') 
   (State 'd' 'e' 'f')
+
+
 
 
