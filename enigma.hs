@@ -19,16 +19,16 @@ import Data.List (elemIndex)
 
 type PB_Conf = String
 type Ref_Conf = String
-type Rot_Conf = Char
+type Rot_Ring = Char
 type Rot_Loc = Char
-type Rot_Type = String
+type Rot_Type = (String, Char)
 
 data Direction = Fwd | Bwd deriving (Show, Eq)
 
 data State = State
-  { rotor1 :: Rot_Loc
-  , rotor2 :: Rot_Loc
-  , rotor3 :: Rot_Loc}
+  { loc1:: Rot_Loc
+  , loc2:: Rot_Loc
+  , loc3:: Rot_Loc}
   deriving (Show)
 
 data Conf = Conf
@@ -37,9 +37,9 @@ data Conf = Conf
   , rtype_1 :: Rot_Type
   , rtype_2 :: Rot_Type
   , rtype_3 :: Rot_Type
-  , ring1 :: Rot_Conf
-  , ring2 :: Rot_Conf
-  , ring3 :: Rot_Conf }
+  , ring1 :: Rot_Ring
+  , ring2 :: Rot_Ring
+  , ring3 :: Rot_Ring }
   deriving (Show)
 
 
@@ -59,10 +59,14 @@ intToChar x
   | (x >= 0) && (x <= 25) = chr $ x + 65
   | otherwise = error "Argument is not between 65 and 90"
 
-
 getIndex :: Eq a => a -> [a] -> Int
 getIndex x xs = fromJust $ elemIndex x xs
 
+nextChar :: Char -> Char
+nextChar c
+  | c == 'Z' = 'A'
+  | ((ord c) >= 65) && ((ord c) <= 90) = succ c
+  | otherwise = error "Argument is not between 'A' and 'Z'"
 
 -- enigma functions
 plugboard :: Direction -> PB_Conf -> Char -> Char
@@ -71,15 +75,17 @@ plugboard Fwd conf c = conf !! (charToInt c)
 
 
 rotate_rotor :: Conf -> State -> State
-rotate_rotor conf state = State 'a' 'b' 'c' -- dummy
+rotate_rotor conf state = state
+--   | snd (rtype_1 conf) == loc1 state = 
+--     (State 
 
 
 reflector :: Ref_Conf -> Char -> Char
 reflector conf c = plugboard Bwd conf c
 
 
-rotor :: Direction -> Rot_Type -> Rot_Conf -> Rot_Loc -> Char -> Char
-rotor dir rtype ring loc c
+rotor :: Direction -> Rot_Type -> Rot_Ring -> Rot_Loc -> Char -> Char
+rotor dir (rtype,_) ring loc c
   | dir == Fwd =
     intToChar (rem26 $ (charToInt fwd_f) - iloc + iring)
   | dir == Bwd =
@@ -97,8 +103,14 @@ enigma_char :: Conf -> State -> Char -> Char
 enigma_char conf state c =
   let new_state = rotate_rotor conf state
   in ( plugboard Bwd (pb conf)
-     . plugboard Fwd (pb conf)
+     . rotor Bwd (rtype_1 conf) (ring1 conf) (loc1 state)
+     . rotor Bwd (rtype_2 conf) (ring2 conf) (loc2 state)
+     . rotor Bwd (rtype_3 conf) (ring3 conf) (loc3 state)
      . reflector (refl conf)
+     . rotor Fwd (rtype_3 conf) (ring3 conf) (loc3 state)
+     . rotor Fwd (rtype_2 conf) (ring2 conf) (loc2 state)
+     . rotor Fwd (rtype_1 conf) (ring1 conf) (loc1 state)
+     . plugboard Fwd (pb conf)
      ) c
 
 
@@ -116,21 +128,21 @@ enigma setting state (x:rest) =
 plugs    = "QWERTYUIOPASDFGHJKLZXCVBNM" -- plug locations
 ref_b    = "YRUHQSLDPXNGOKMIEBFZCWVJAT" -- M3 B reflector
 ref_c    = "FVPJIAOYEDRZXWGCTKUQSBNMHL" -- M3 C reflector
-rtypeI   = "EKMFLGDQVZNTOWYHXUSPAIBRCJ" -- rotor type I
-rtypeII  = "AJDKSIRUXBLHWTMCQGZNPYFVOE" -- rotor type II
-rtypeIII = "BDFHJLCPRTXVZNYEIWGAKMUSQO" -- rotor type III
-rtypeIV  = "ESOVPZJAYQUIRHXLNFTGKDCMWB" -- rotor type IV
-rtypeV   = "VZBRGITYUPSDNHLXAWMJQOFECK" -- rotor type V
+rtypeI   = ("EKMFLGDQVZNTOWYHXUSPAIBRCJ", 'Q') -- rotor type I
+rtypeII  = ("AJDKSIRUXBLHWTMCQGZNPYFVOE", 'E') -- rotor type II
+rtypeIII = ("BDFHJLCPRTXVZNYEIWGAKMUSQO", 'V') -- rotor type III
+rtypeIV  = ("ESOVPZJAYQUIRHXLNFTGKDCMWB", 'J') -- rotor type IV
+rtypeV   = ("VZBRGITYUPSDNHLXAWMJQOFECK", 'Z') -- rotor type V
 
 
 run_char =
   enigma_char
-  (Conf plugs ref_b rtypeI rtypeII rtypeIII 'a' 'b' 'c')
-  (State 'd' 'e' 'f')
+  (Conf plugs ref_b rtypeI rtypeII rtypeIII 'Z' 'A' 'U')
+  (State 'R' 'X' 'C')
 run =
   enigma
-  (Conf plugs ref_b rtypeI rtypeII rtypeIII 'a' 'b' 'c') 
-  (State 'd' 'e' 'f')
+  (Conf plugs ref_b rtypeI rtypeII rtypeIII 'Z' 'A' 'U')
+  (State 'R' 'X' 'C')
 
 
 
