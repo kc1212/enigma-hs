@@ -16,17 +16,26 @@ import Data.Char (ord, chr)
 import Data.Maybe (fromJust)
 import Data.List (elemIndex)
 
+
 type PB_Config = String
 type Ref_Config = String
+type Rot_Config = Char
+type Rot_Loc = Char
 
 data Direction = Fwd | Bwd deriving (Show, Eq)
 
 data State = State
-  { rotor1 :: Char, rotor2 :: Char, rotor3 :: Char }
+  { rotor1 :: Rot_Loc
+  , rotor2 :: Rot_Loc
+  , rotor3 :: Rot_Loc}
   deriving (Show)
 
 data Conf = Conf
-  { pb :: PB_Config, refl :: Ref_Config, pin1 :: Char, pin2 :: Char, pin3 :: Char }
+  { pb :: PB_Config
+  , refl :: Ref_Config
+  , pin1 :: Rot_Config
+  , pin2 :: Rot_Config
+  , pin3 :: Rot_Config }
   deriving (Show)
 
 
@@ -53,6 +62,11 @@ rotate_rotor conf state = State 'a' 'b' 'c' -- dummy
 
 reflector :: Ref_Config -> Char -> Char
 reflector conf c = plugboard Bwd conf c
+
+
+-- rotor :: Rot_Config -> Rot_Loc -> Char -> Char
+-- rotor conf loc c = 
+
 
 enigma_char :: Conf -> State -> Char -> Char
 enigma_char conf state c =
