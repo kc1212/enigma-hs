@@ -1,2 +1,4 @@
+# enigma machine emulator written in haskell for fun
+
 # todo: improve rotor function
 #       add validation functions
