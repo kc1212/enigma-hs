@@ -22,24 +22,15 @@ type Ref_Conf = String
 type Rot_Ring = Char
 type Rot_Loc = Char
 type Rot_Type = (String, Char)
+type State = [Rot_Loc]
 
 data Direction = Fwd | Bwd deriving (Show, Eq)
-
-data State = State
-  { loc1:: Rot_Loc
-  , loc2:: Rot_Loc
-  , loc3:: Rot_Loc}
-  deriving (Show)
 
 data Conf = Conf
   { pb :: PB_Conf
   , refl :: Ref_Conf
-  , rtype_1 :: Rot_Type
-  , rtype_2 :: Rot_Type
-  , rtype_3 :: Rot_Type
-  , ring1 :: Rot_Ring
-  , ring2 :: Rot_Ring
-  , ring3 :: Rot_Ring }
+  , rtype :: [Rot_Type]
+  , ring :: [Rot_Ring]}
   deriving (Show)
 
 
@@ -68,16 +59,23 @@ nextChar c
   | ((ord c) >= 65) && ((ord c) <= 90) = succ c
   | otherwise = error "Argument is not between 'A' and 'Z'"
 
+
 -- enigma functions
 plugboard :: Direction -> PB_Conf -> Char -> Char
 plugboard Bwd conf c = alphs !! (getIndex c conf)
 plugboard Fwd conf c = conf !! (charToInt c)
 
 
-rotate_rotor :: Conf -> State -> State
-rotate_rotor conf state = state
---   | snd (rtype_1 conf) == loc1 state = 
---     (State 
+rotate_rotor :: Int -> Conf -> State -> State
+rotate_rotor 0 _ state =
+  (nextChar (state !! 0)) : tail state
+rotate_rotor x conf state 
+  | (snd (rtype conf !! x)) == current_char = part1 ++ (nextChar current_char):part2
+  | otherwise = state
+  where
+    (part1,_:part2) = splitAt x state
+    current_char = state !! x
+
 
 
 reflector :: Ref_Conf -> Char -> Char
@@ -101,25 +99,28 @@ rotor dir (rtype,_) ring loc c
 
 enigma_char :: Conf -> State -> Char -> Char
 enigma_char conf state c =
-  let new_state = rotate_rotor conf state
-  in ( plugboard Bwd (pb conf)
-     . rotor Bwd (rtype_1 conf) (ring1 conf) (loc1 state)
-     . rotor Bwd (rtype_2 conf) (ring2 conf) (loc2 state)
-     . rotor Bwd (rtype_3 conf) (ring3 conf) (loc3 state)
+  ( plugboard Bwd (pb conf)
+     . rotor Bwd ((rtype conf) !! 0) ((ring conf) !! 0) (state !! 0)
+     . rotor Bwd ((rtype conf) !! 1) ((ring conf) !! 1) (state !! 1)
+     . rotor Bwd ((rtype conf) !! 2) ((ring conf) !! 2) (state !! 2)
      . reflector (refl conf)
-     . rotor Fwd (rtype_3 conf) (ring3 conf) (loc3 state)
-     . rotor Fwd (rtype_2 conf) (ring2 conf) (loc2 state)
-     . rotor Fwd (rtype_1 conf) (ring1 conf) (loc1 state)
+     . rotor Fwd ((rtype conf) !! 0) ((ring conf) !! 0) (state !! 0)
+     . rotor Fwd ((rtype conf) !! 1) ((ring conf) !! 1) (state !! 1)
+     . rotor Fwd ((rtype conf) !! 2) ((ring conf) !! 2) (state !! 2)
      . plugboard Fwd (pb conf)
-     ) c
+  ) c
 
 
 enigma :: Conf -> State -> String -> String
 enigma _ _ [] = []
-enigma setting state (x:rest) =
-  let new_state = rotate_rotor setting state
-      result = enigma_char setting new_state x
-  in result : enigma setting new_state rest
+enigma conf state (x:rest) =
+  let
+    new_state =
+      ((rotate_rotor 2 conf)
+      .(rotate_rotor 1 conf)
+      .(rotate_rotor 0 conf)) state
+    result = enigma_char conf new_state x
+  in result : enigma conf new_state rest
 
 
 -- verify_conf :: -- need to verify the config type
@@ -133,17 +134,19 @@ rtypeII  = ("AJDKSIRUXBLHWTMCQGZNPYFVOE", 'E') -- rotor type II
 rtypeIII = ("BDFHJLCPRTXVZNYEIWGAKMUSQO", 'V') -- rotor type III
 rtypeIV  = ("ESOVPZJAYQUIRHXLNFTGKDCMWB", 'J') -- rotor type IV
 rtypeV   = ("VZBRGITYUPSDNHLXAWMJQOFECK", 'Z') -- rotor type V
+myconf = Conf plugs ref_b [rtypeI,rtypeII,rtypeIII] ['Z','A','U']
+mystate = ['R','X','C']
+
+run_char = enigma_char myconf mystate
+run = enigma myconf mystate
 
 
-run_char =
-  enigma_char
-  (Conf plugs ref_b rtypeI rtypeII rtypeIII 'Z' 'A' 'U')
-  (State 'R' 'X' 'C')
-run =
-  enigma
-  (Conf plugs ref_b rtypeI rtypeII rtypeIII 'Z' 'A' 'U')
-  (State 'R' 'X' 'C')
 
-
+-- test functions
+testconf = Conf plugs ref_b [rtypeI,rtypeII,rtypeIII] ['A','A','A']
+teststate = ['A','A','A']
+rotate_test1 = rotate_rotor 1 myconf ['R','E','Z']
+rotate_test0 = rotate_rotor 0 myconf ['R','E','Z']
+rotor_test1 = rotor Fwd ((rtype myconf) !! 0) ((ring testconf) !! 0) (teststate !! 0) 'B'
 
 
