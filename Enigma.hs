@@ -1,16 +1,5 @@
--- Enigma Process
---  1. Convert input letter to number - validate!
---  2. Rotate wheels
---  3. Pass through plugboard
---  4. Pass through right-hand wheel
---  5. Pass through middle wheel
---  6. Pass through left-hand wheel
---  7. Pass through reflector
---  8. Pass through left-hand wheel
---  9. Pass through middle wheel
--- 10. Pass through right-hand wheel
--- 11. Pass through plugboard
--- 12. Convert to output letter
+
+module Enigma where
 
 import Data.Char (ord, chr)
 import Data.Maybe (fromJust)
@@ -139,18 +128,5 @@ mystate = ['R','X','C']
 
 run_char = enigma_char myconf mystate
 run = enigma myconf mystate
-
-
-
--- test functions
-testconf = Conf plugs ref_b [rtypeI,rtypeII,rtypeIII] ['A','A','A']
-teststate = ['A','A','A']
-rotate_test1 = rotate_rotor 1 myconf ['R','E','Z']
-rotate_test0 = rotate_rotor 0 myconf ['R','E','Z']
-rotate_test3 =
-  ((rotate_rotor 2 testconf)
-  .(rotate_rotor 1 testconf)
-  .(rotate_rotor 0 testconf)) teststate
-rotor_test1 = rotor Fwd ((rtype myconf) !! 0) ((ring testconf) !! 0) (teststate !! 0) 'B'
 
 

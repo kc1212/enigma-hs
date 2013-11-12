@@ -1,4 +1,18 @@
-# enigma machine emulator written in haskell for fun
+Enigma machine emulator written in haskell for fun.
 
-# todo: improve rotor function
-#       add validation functions
+Enigma Process
+ 1. Validate input
+ 2. Rotate wheels
+ 3. Pass through plugboard
+ 4. Pass through right-hand wheel
+ 5. Pass through middle wheel
+ 6. Pass through left-hand wheel
+ 7. Pass through reflector
+ 8. Pass through left-hand wheel
+ 9. Pass through middle wheel
+10. Pass through right-hand wheel
+11. Pass through plugboard
+
+
+todo: improve rotor function
+      add validation functions
