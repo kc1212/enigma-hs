@@ -1,6 +1,7 @@
 
 module Enigma where
 
+
 import Data.Char (ord, chr)
 import Data.Maybe (fromJust)
 import Data.List (elemIndex)
@@ -56,15 +57,16 @@ plugboard Fwd conf c = conf !! (charToInt c)
 
 
 rotate_rotor :: Int -> Conf -> State -> State
-rotate_rotor 0 _ state =
-  (nextChar (state !! 0)) : tail state
-rotate_rotor x conf state 
-  | (snd (rtype conf !! x)) == current_char = part1 ++ (nextChar current_char):part2
+rotate_rotor 2 _ state =
+  (init state) ++ [nextChar $ last state] -- move the last element
+rotate_rotor x conf state
+  | nextChar pawl_loc == right_loc = part1 ++ (nextChar current_loc):part2
   | otherwise = state
   where
     (part1,_:part2) = splitAt x state
-    current_char = state !! x
-
+    pawl_loc = snd (rtype conf !! (x+1))
+    right_loc = state !! (x+1)
+    current_loc = state !! x
 
 
 reflector :: Ref_Conf -> Char -> Char
@@ -72,7 +74,7 @@ reflector conf c = plugboard Bwd conf c
 
 
 rotor :: Direction -> Rot_Type -> Rot_Ring -> Rot_Loc -> Char -> Char
-rotor dir (rtype,_) ring loc c
+rotor dir (rt,_) ring loc c -- where rt is rotor type
   | dir == Fwd =
     intToChar (rem26 $ (charToInt fwd_f) - iloc + iring)
   | dir == Bwd =
@@ -82,8 +84,8 @@ rotor dir (rtype,_) ring loc c
     ic = charToInt c
     iloc = charToInt loc
     iring = charToInt ring
-    fwd_f = rtype !! rem26 (ic + iloc - iring)
-    bwd_f = alphs !! getIndex (intToChar (rem26 (ic + iloc - iring))) rtype
+    fwd_f = rt!! rem26 (ic + iloc - iring)
+    bwd_f = alphs !! getIndex (intToChar (rem26 (ic + iloc - iring))) rt
 
 
 enigma_char :: Conf -> State -> Char -> Char
@@ -103,19 +105,17 @@ enigma_char conf state c =
 enigma :: Conf -> State -> String -> String
 enigma _ _ [] = []
 enigma conf state (x:rest) =
-  let
-    new_state =
-      ((rotate_rotor 2 conf)
-      .(rotate_rotor 1 conf)
-      .(rotate_rotor 0 conf)) state
-    result = enigma_char conf new_state x
-  in result : enigma conf new_state rest
+  let new_state =
+        ((rotate_rotor 0 conf)
+        .(rotate_rotor 1 conf)
+        .(rotate_rotor 2 conf)) state
+  in (enigma_char conf new_state x) : (enigma conf new_state rest)
 
 
 -- verify_conf :: -- need to verify the config type
---
--- my main program...
-plugs    = "QWERTYUIOPASDFGHJKLZXCVBNM" -- plug locations
+
+-- some default configurations
+plugs = ['A'..'Z'] -- plug locations
 ref_b    = "YRUHQSLDPXNGOKMIEBFZCWVJAT" -- M3 B reflector
 ref_c    = "FVPJIAOYEDRZXWGCTKUQSBNMHL" -- M3 C reflector
 rtypeI   = ("EKMFLGDQVZNTOWYHXUSPAIBRCJ", 'Q') -- rotor type I
@@ -123,10 +123,4 @@ rtypeII  = ("AJDKSIRUXBLHWTMCQGZNPYFVOE", 'E') -- rotor type II
 rtypeIII = ("BDFHJLCPRTXVZNYEIWGAKMUSQO", 'V') -- rotor type III
 rtypeIV  = ("ESOVPZJAYQUIRHXLNFTGKDCMWB", 'J') -- rotor type IV
 rtypeV   = ("VZBRGITYUPSDNHLXAWMJQOFECK", 'Z') -- rotor type V
-myconf = Conf plugs ref_b [rtypeI,rtypeII,rtypeIII] ['Z','A','U']
-mystate = ['R','X','C']
-
-run_char = enigma_char myconf mystate
-run = enigma myconf mystate
-
 

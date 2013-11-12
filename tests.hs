@@ -1,24 +1,70 @@
 
 import Enigma
 
--- test functions
+-- general tests
+-------------------------------------------------------------------------------
 aaa_conf = Conf plugs ref_b [rtypeI,rtypeII,rtypeIII] ['A','A','A']
 aaa_state = ['A','A','A']
 
-test_conf = Conf plugs ref_b [rtypeI,rtypeII,rtypeIII] ['Z','A','U']
-test_state = ['R','E','Z']
+aaa_test_1A =
+  (enigma aaa_conf ['A','A','T'] "AAA")
+  == "BMU"
 
-rotate_test1 = rotate_rotor 1 test_conf test_state
-rotate_test0 = rotate_rotor 0 test_conf test_state 
+aaa_test_48A =
+  (enigma aaa_conf aaa_state (take 48 $ repeat 'A'))
+  == "BDZGOWCXLTKSBTMCDLPBMUQOFXYHCXTGYJFLINHNXSHIUNTH"
 
-rotate_test3 =
-  ((rotate_rotor 2 aaa_conf)
+
+-- rotor test
+-------------------------------------------------------------------------------
+rotor_test = (
+  ((rotate_rotor 0 aaa_conf)
   .(rotate_rotor 1 aaa_conf)
-  .(rotate_rotor 0 aaa_conf)) aaa_state
+  .(rotate_rotor 2 aaa_conf)) ['A','A','U']) 
+  == ['A','A','V']
 
-rotor_test1 = rotor Fwd ((rtype test_conf) !! 0) ((ring test_conf) !! 0) (test_state !! 0) 'B'
 
-aaa_test1 = enigma aaa_conf aaa_state "AAAAAAAAAAAAAAAAAAAAA"
-aaa_test2 = enigma aaa_conf aaa_state "LCIBFOKQR"
+-- detailed tests: encode A at rotor pos AAV using default settings
+-------------------------------------------------------------------------------
+rotor2_fwd_test =
+  (rotor Fwd ((rtype aaa_conf) !! 2) ((ring aaa_conf) !! 2) 'V' 'A')
+  ==
+  'R'
+
+-- carried forward from rotor2_fwd_test
+rotor1_fwd_test =
+  (rotor Fwd ((rtype aaa_conf) !! 1) ((ring aaa_conf) !! 1) 'A' 'R')
+  ==
+  'G'
+
+-- carried forward from rotor1_fwd_test
+rotor0_fwd_test =
+  (rotor Fwd ((rtype aaa_conf) !! 0) ((ring aaa_conf) !! 0) 'A' 'G')
+  ==
+  'D'
+
+-- reflector
+reflector_test =
+  (reflector ref_b 'D')
+  ==
+  'H'
+
+-- backwards now..
+rotor0_bwd_test =
+  (rotor Bwd ((rtype aaa_conf) !! 0) ((ring aaa_conf) !! 0) 'A' 'H')
+  ==
+  'P'
+
+rotor1_bwd_test =
+  (rotor Bwd ((rtype aaa_conf) !! 1) ((ring aaa_conf) !! 1) 'A' 'P')
+  ==
+  'U'
+
+rotor2_bwd_test =
+  (rotor Bwd ((rtype aaa_conf) !! 2) ((ring aaa_conf) !! 2) 'V' 'U')
+  ==
+  'M'
+
+
 
 
