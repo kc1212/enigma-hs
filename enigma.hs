@@ -100,9 +100,9 @@ rotor dir (rtype,_) ring loc c
 enigma_char :: Conf -> State -> Char -> Char
 enigma_char conf state c =
   ( plugboard Bwd (pb conf)
-     . rotor Bwd ((rtype conf) !! 0) ((ring conf) !! 0) (state !! 0)
-     . rotor Bwd ((rtype conf) !! 1) ((ring conf) !! 1) (state !! 1)
      . rotor Bwd ((rtype conf) !! 2) ((ring conf) !! 2) (state !! 2)
+     . rotor Bwd ((rtype conf) !! 1) ((ring conf) !! 1) (state !! 1)
+     . rotor Bwd ((rtype conf) !! 0) ((ring conf) !! 0) (state !! 0)
      . reflector (refl conf)
      . rotor Fwd ((rtype conf) !! 0) ((ring conf) !! 0) (state !! 0)
      . rotor Fwd ((rtype conf) !! 1) ((ring conf) !! 1) (state !! 1)
@@ -147,6 +147,10 @@ testconf = Conf plugs ref_b [rtypeI,rtypeII,rtypeIII] ['A','A','A']
 teststate = ['A','A','A']
 rotate_test1 = rotate_rotor 1 myconf ['R','E','Z']
 rotate_test0 = rotate_rotor 0 myconf ['R','E','Z']
+rotate_test3 =
+  ((rotate_rotor 2 testconf)
+  .(rotate_rotor 1 testconf)
+  .(rotate_rotor 0 testconf)) teststate
 rotor_test1 = rotor Fwd ((rtype myconf) !! 0) ((ring testconf) !! 0) (teststate !! 0) 'B'
 
 
