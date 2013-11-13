@@ -27,19 +27,19 @@ rotor_test = (
 -- detailed tests: encode A at rotor pos AAV using default settings
 -------------------------------------------------------------------------------
 rotor2_fwd_test =
-  (rotor Fwd ((rtype aaa_conf) !! 2) ((ring aaa_conf) !! 2) 'V' 'A')
+  (rotor Fwd ((get_type aaa_conf) !! 2) ((get_ring aaa_conf) !! 2) 'V' 'A')
   ==
   'R'
 
 -- carried forward from rotor2_fwd_test
 rotor1_fwd_test =
-  (rotor Fwd ((rtype aaa_conf) !! 1) ((ring aaa_conf) !! 1) 'A' 'R')
+  (rotor Fwd ((get_type aaa_conf) !! 1) ((get_ring aaa_conf) !! 1) 'A' 'R')
   ==
   'G'
 
 -- carried forward from rotor1_fwd_test
 rotor0_fwd_test =
-  (rotor Fwd ((rtype aaa_conf) !! 0) ((ring aaa_conf) !! 0) 'A' 'G')
+  (rotor Fwd ((get_type aaa_conf) !! 0) ((get_ring aaa_conf) !! 0) 'A' 'G')
   ==
   'D'
 
@@ -51,17 +51,17 @@ reflector_test =
 
 -- backwards now..
 rotor0_bwd_test =
-  (rotor Bwd ((rtype aaa_conf) !! 0) ((ring aaa_conf) !! 0) 'A' 'H')
+  (rotor Bwd ((get_type aaa_conf) !! 0) ((get_ring aaa_conf) !! 0) 'A' 'H')
   ==
   'P'
 
 rotor1_bwd_test =
-  (rotor Bwd ((rtype aaa_conf) !! 1) ((ring aaa_conf) !! 1) 'A' 'P')
+  (rotor Bwd ((get_type aaa_conf) !! 1) ((get_ring aaa_conf) !! 1) 'A' 'P')
   ==
   'U'
 
 rotor2_bwd_test =
-  (rotor Bwd ((rtype aaa_conf) !! 2) ((ring aaa_conf) !! 2) 'V' 'U')
+  (rotor Bwd ((get_type aaa_conf) !! 2) ((get_ring aaa_conf) !! 2) 'V' 'U')
   ==
   'M'
 

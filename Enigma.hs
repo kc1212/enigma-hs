@@ -17,14 +17,15 @@ type State = [Rot_Loc]
 data Direction = Fwd | Bwd deriving (Show, Eq)
 
 data Conf = Conf
-  { pb :: PB_Conf
-  , refl :: Ref_Conf
-  , rtype :: [Rot_Type]
-  , ring :: [Rot_Ring]}
+  { get_pb :: PB_Conf
+  , get_refl :: Ref_Conf
+  , get_type :: [Rot_Type]
+  , get_ring :: [Rot_Ring]}
   deriving (Show)
 
 
 -- helper functions
+alphs :: [Char]
 alphs = ['A'..'Z']
 
 rem26 :: Int -> Int
@@ -64,7 +65,7 @@ rotate_rotor x conf state
   | otherwise = state
   where
     (part1,_:part2) = splitAt x state
-    pawl_loc = snd (rtype conf !! (x+1))
+    pawl_loc = snd (get_type conf !! (x+1))
     right_loc = state !! (x+1)
     current_loc = state !! x
 
@@ -74,31 +75,29 @@ reflector conf c = plugboard Bwd conf c
 
 
 rotor :: Direction -> Rot_Type -> Rot_Ring -> Rot_Loc -> Char -> Char
-rotor dir (rt,_) ring loc c -- where rt is rotor type
-  | dir == Fwd =
-    intToChar (rem26 $ (charToInt fwd_f) - iloc + iring)
-  | dir == Bwd =
-    intToChar (rem26 $ (charToInt bwd_f) - iloc + iring)
-  | otherwise = error "Unknown direction"
+rotor dir (tpe,_) ring loc c = -- where tpe is rotor type
+  intToChar (rem26 $ (charToInt code) - iloc + iring)
   where
     ic = charToInt c
     iloc = charToInt loc
     iring = charToInt ring
-    fwd_f = rt!! rem26 (ic + iloc - iring)
-    bwd_f = alphs !! getIndex (intToChar (rem26 (ic + iloc - iring))) rt
+    code = if (dir == Fwd) -- for intermediate calculation
+        then tpe !! rem26 (ic + iloc - iring)
+        else alphs !! getIndex ((intToChar.rem26) $ ic + iloc - iring) tpe
+
 
 
 enigma_char :: Conf -> State -> Char -> Char
 enigma_char conf state c =
-  ( plugboard Bwd (pb conf)
-     . rotor Bwd ((rtype conf) !! 2) ((ring conf) !! 2) (state !! 2)
-     . rotor Bwd ((rtype conf) !! 1) ((ring conf) !! 1) (state !! 1)
-     . rotor Bwd ((rtype conf) !! 0) ((ring conf) !! 0) (state !! 0)
-     . reflector (refl conf)
-     . rotor Fwd ((rtype conf) !! 0) ((ring conf) !! 0) (state !! 0)
-     . rotor Fwd ((rtype conf) !! 1) ((ring conf) !! 1) (state !! 1)
-     . rotor Fwd ((rtype conf) !! 2) ((ring conf) !! 2) (state !! 2)
-     . plugboard Fwd (pb conf)
+  ( plugboard Bwd (get_pb conf)
+     . rotor Bwd ((get_type conf) !! 2) ((get_ring conf) !! 2) (state !! 2)
+     . rotor Bwd ((get_type conf) !! 1) ((get_ring conf) !! 1) (state !! 1)
+     . rotor Bwd ((get_type conf) !! 0) ((get_ring conf) !! 0) (state !! 0)
+     . reflector (get_refl conf)
+     . rotor Fwd ((get_type conf) !! 0) ((get_ring conf) !! 0) (state !! 0)
+     . rotor Fwd ((get_type conf) !! 1) ((get_ring conf) !! 1) (state !! 1)
+     . rotor Fwd ((get_type conf) !! 2) ((get_ring conf) !! 2) (state !! 2)
+     . plugboard Fwd (get_pb conf)
   ) c
 
 
