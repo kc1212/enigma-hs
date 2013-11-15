@@ -7,6 +7,7 @@ import Data.List (elemIndex)
 
 type State = [Char] -- state of the enigma machine
 data Direction = Fwd | Bwd deriving (Show, Eq)
+data RotorSignalDir = SignalIn | SignalOut deriving (Show, Eq)
 data Conf = Conf
   { get_pb :: String
   , get_refl :: String
@@ -25,12 +26,12 @@ rem26 x = rem (x+52) 26
 charToInt :: Char -> Int
 charToInt c
   | c >= 'A' && c <= 'Z' = (ord c) - 65
-  | otherwise = error "Not a capital alphabet."
+  | otherwise = error "Not a capital alphabet in charToInt."
 
 intToChar :: Int -> Char
 intToChar x
   | x >= 0 && x <= 25 = chr $ x + 65
-  | otherwise = error "Argument is not between 0 and 25"
+  | otherwise = error "Argument is not between 0 and 25 in intToChar."
 
 getIndex :: Eq a => a -> [a] -> Int
 getIndex x xs = fromJust $ elemIndex x xs
@@ -39,7 +40,7 @@ cycleChar :: Char -> Char
 cycleChar c
   | c == 'Z' = 'A'
   | c >= 'A' && c <= 'Z' = succ c
-  | otherwise = error "Argument is not between 'A' and 'Z'"
+  | otherwise = error "Argument is not between 'A' and 'Z' in cycleChar."
 
 
 -- enigma machine functions ---------------------------------------------------
@@ -69,15 +70,28 @@ reflector ref_conf c = plugboard Bwd ref_conf c
 -- depends on the signal direction, rotor type, ring setting,
 -- rotor location and of course the input character respectively
 rotor :: Direction -> (String,Char) -> Char -> Char -> Char -> Char
-rotor dir (rtype,_) ring loc c = -- where rtype is rotor type
-  intToChar (rem26 $ (charToInt code) - iloc + iring)
+rotor dir rtype ring loc c = -- where rtype is rotor type
+  ((rotorOffset SignalOut ring loc)
+  .(rotorWiring dir rtype)
+  .(rotorOffset SignalIn ring loc)) c
+
+-- helper function for rotor: performs the offset
+rotorOffset :: RotorSignalDir -> Char -> Char -> Char -> Char
+rotorOffset dir ring loc c
+  | dir == SignalIn = intToChar $ rem26 $ ic + iloc - iring
+  | dir == SignalOut = intToChar $ rem26 $ ic - iloc + iring
+  | otherwise = error "Critical error in rotorOffset."
   where
     ic = charToInt c
     iloc = charToInt loc
     iring = charToInt ring
-    code = if (dir == Fwd) -- for intermediate calculation
-        then rtype !! rem26 (ic + iloc - iring)
-        else alphs !! getIndex ((intToChar.rem26) $ ic + iloc - iring) rtype
+
+-- helper function for rotor: uses the wiring table to reroute the signal
+rotorWiring :: Direction -> (String,Char) -> Char -> Char
+rotorWiring Fwd (wiring,_) c =
+  wiring !! charToInt c
+rotorWiring Bwd (wiring,_) c =
+  alphs !! getIndex c wiring
 
 -- this function runs the enigma machine for a single character
 -- this does not change the machine state
