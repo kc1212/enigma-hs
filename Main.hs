@@ -3,6 +3,7 @@ import Enigma
 
 myconf :: Conf
 myconf = Conf plugs ref_b [rtypeI,rtypeII,rtypeIII] ['A','A','A']
+
 mystate :: State
 mystate = ['A','A','A']
 
@@ -13,3 +14,5 @@ main :: IO ()
 main = do
   msg <- getLine
   putStrLn (run msg)
+
+

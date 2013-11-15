@@ -1,30 +1,21 @@
 
 module Enigma where
 
-
 import Data.Char (ord, chr)
 import Data.Maybe (fromJust)
 import Data.List (elemIndex)
 
-
-type PB_Conf = String
-type Ref_Conf = String
-type Rot_Ring = Char
-type Rot_Loc = Char
-type Rot_Type = (String, Char)
-type State = [Rot_Loc]
-
+type State = [Char] -- state of the enigma machine
 data Direction = Fwd | Bwd deriving (Show, Eq)
-
 data Conf = Conf
-  { get_pb :: PB_Conf
-  , get_refl :: Ref_Conf
-  , get_type :: [Rot_Type]
-  , get_ring :: [Rot_Ring]}
+  { get_pb :: String
+  , get_refl :: String
+  , get_type :: [(String, Char)]
+  , get_ring :: [Char]}
   deriving (Show)
 
 
--- helper functions
+-- helper functions -----------------------------------------------------------
 alphs :: [Char]
 alphs = ['A'..'Z']
 
@@ -33,35 +24,36 @@ rem26 x = rem (x+52) 26
 
 charToInt :: Char -> Int
 charToInt c
-  | ((ord c) >= 65) && ((ord c) <= 90) = (ord c) - 65
+  | c >= 'A' && c <= 'Z' = (ord c) - 65
   | otherwise = error "Not a capital alphabet."
 
 intToChar :: Int -> Char
 intToChar x
-  | (x >= 0) && (x <= 25) = chr $ x + 65
-  | otherwise = error "Argument is not between 65 and 90"
+  | x >= 0 && x <= 25 = chr $ x + 65
+  | otherwise = error "Argument is not between 0 and 25"
 
 getIndex :: Eq a => a -> [a] -> Int
 getIndex x xs = fromJust $ elemIndex x xs
 
-nextChar :: Char -> Char
-nextChar c
+cycleChar :: Char -> Char
+cycleChar c
   | c == 'Z' = 'A'
-  | ((ord c) >= 65) && ((ord c) <= 90) = succ c
+  | c >= 'A' && c <= 'Z' = succ c
   | otherwise = error "Argument is not between 'A' and 'Z'"
 
 
--- enigma functions
-plugboard :: Direction -> PB_Conf -> Char -> Char
-plugboard Bwd conf c = alphs !! (getIndex c conf)
-plugboard Fwd conf c = conf !! (charToInt c)
+-- enigma machine functions ---------------------------------------------------
+-- this is for re-routing the signal to a different character
+plugboard :: Direction -> String -> Char -> Char
+plugboard Bwd pb_conf c = alphs !! (getIndex c pb_conf)
+plugboard Fwd pb_conf c = pb_conf !! (charToInt c)
 
-
+-- rotates a single rotor depending on the state and its configuration
 rotate_rotor :: Int -> Conf -> State -> State
 rotate_rotor 2 _ state =
-  (init state) ++ [nextChar $ last state] -- move the last element
+  (init state) ++ [cycleChar $ last state] -- move the last element
 rotate_rotor x conf state
-  | nextChar pawl_loc == right_loc = part1 ++ (nextChar current_loc):part2
+  | cycleChar pawl_loc == right_loc = part1 ++ (cycleChar current_loc):part2
   | otherwise = state
   where
     (part1,_:part2) = splitAt x state
@@ -69,24 +61,26 @@ rotate_rotor x conf state
     right_loc = state !! (x+1)
     current_loc = state !! x
 
+-- like the plugboard, also for re-routing the signal
+reflector :: String -> Char -> Char
+reflector ref_conf c = plugboard Bwd ref_conf c
 
-reflector :: Ref_Conf -> Char -> Char
-reflector conf c = plugboard Bwd conf c
-
-
-rotor :: Direction -> Rot_Type -> Rot_Ring -> Rot_Loc -> Char -> Char
-rotor dir (tpe,_) ring loc c = -- where tpe is rotor type
+-- encodes a single character using a single rotor,
+-- depends on the signal direction, rotor type, ring setting,
+-- rotor location and of course the input character respectively
+rotor :: Direction -> (String,Char) -> Char -> Char -> Char -> Char
+rotor dir (rtype,_) ring loc c = -- where rtype is rotor type
   intToChar (rem26 $ (charToInt code) - iloc + iring)
   where
     ic = charToInt c
     iloc = charToInt loc
     iring = charToInt ring
     code = if (dir == Fwd) -- for intermediate calculation
-        then tpe !! rem26 (ic + iloc - iring)
-        else alphs !! getIndex ((intToChar.rem26) $ ic + iloc - iring) tpe
+        then rtype !! rem26 (ic + iloc - iring)
+        else alphs !! getIndex ((intToChar.rem26) $ ic + iloc - iring) rtype
 
-
-
+-- this function runs the enigma machine for a single character
+-- this does not change the machine state
 enigma_char :: Conf -> State -> Char -> Char
 enigma_char conf state c =
   ( plugboard Bwd (get_pb conf)
@@ -100,7 +94,7 @@ enigma_char conf state c =
      . plugboard Fwd (get_pb conf)
   ) c
 
-
+-- runs the enigma machine for a string
 enigma :: Conf -> State -> String -> String
 enigma _ _ [] = []
 enigma conf state (x:rest) =

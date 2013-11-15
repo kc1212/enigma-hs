@@ -1,12 +1,11 @@
 
 import Enigma
 
--- general tests
--------------------------------------------------------------------------------
+-- general tests --------------------------------------------------------------
 aaa_conf = Conf plugs ref_b [rtypeI,rtypeII,rtypeIII] ['A','A','A']
 aaa_state = ['A','A','A']
 
-aaa_test_1A =
+aaa_test_3A = -- encoding those letter will cause two rotors to rotate
   (enigma aaa_conf ['A','A','T'] "AAA")
   == "BMU"
 
@@ -14,9 +13,13 @@ aaa_test_48A =
   (enigma aaa_conf aaa_state (take 48 $ repeat 'A'))
   == "BDZGOWCXLTKSBTMCDLPBMUQOFXYHCXTGYJFLINHNXSHIUNTH"
 
+aaa_test_48A_decode =
+  (enigma aaa_conf aaa_state "BDZGOWCXLTKSBTMCDLPBMUQOFXYHCXTGYJFLINHNXSHIUNTH")
+  ==
+  (take 48 $ repeat 'A')
 
--- rotor test
--------------------------------------------------------------------------------
+
+-- rotor test -----------------------------------------------------------------
 rotor_test = (
   ((rotate_rotor 0 aaa_conf)
   .(rotate_rotor 1 aaa_conf)
@@ -24,8 +27,7 @@ rotor_test = (
   == ['A','A','V']
 
 
--- detailed tests: encode A at rotor pos AAV using default settings
--------------------------------------------------------------------------------
+-- detailed tests: encode A at rotor pos AAV using default settings -----------
 rotor2_fwd_test =
   (rotor Fwd ((get_type aaa_conf) !! 2) ((get_ring aaa_conf) !! 2) 'V' 'A')
   ==
@@ -64,7 +66,6 @@ rotor2_bwd_test =
   (rotor Bwd ((get_type aaa_conf) !! 2) ((get_ring aaa_conf) !! 2) 'V' 'U')
   ==
   'M'
-
 
 
 

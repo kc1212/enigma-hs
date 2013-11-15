@@ -1,4 +1,10 @@
-Enigma machine emulator written in haskell for fun.
+Enigma machine emulator written in Haskell to practice and for fun.
+
+To run the program:
+    make
+    echo "IDPHRIUSHJ" | ./Main
+
+feel free to change the settings in Main.hs
 
 Enigma Process
  1. Validate input
@@ -16,3 +22,5 @@ Enigma Process
 
 todo: improve rotor function
       add validation functions
+
+
