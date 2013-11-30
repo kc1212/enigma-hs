@@ -1,8 +1,9 @@
 
+import Helper
 import Enigma
 
 -- general tests --------------------------------------------------------------
-aaa_conf = Conf plugs ref_b [rtypeI,rtypeII,rtypeIII] ['A','A','A']
+aaa_conf = Conf plugs refB [rtypeI,rtypeII,rtypeIII] ['A','A','A']
 aaa_state = ['A','A','A']
 
 aaa_test_3A = -- encoding those letter will cause two rotors to rotate
@@ -21,9 +22,9 @@ aaa_test_48A_decode =
 
 -- rotor test -----------------------------------------------------------------
 rotor_test = (
-  ((rotate_rotor 0 aaa_conf)
-  .(rotate_rotor 1 aaa_conf)
-  .(rotate_rotor 2 aaa_conf)) ['A','A','U']) 
+  ((rotateRotor 0 aaa_conf)
+  .(rotateRotor 1 aaa_conf)
+  .(rotateRotor 2 aaa_conf)) ['A','A','U']) 
   == ['A','A','V']
 
 
@@ -47,7 +48,7 @@ rotor0_fwd_test =
 
 -- reflector
 reflector_test =
-  (reflector ref_b 'D')
+  (reflector refB 'D')
   ==
   'H'
 

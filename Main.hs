@@ -1,18 +1,16 @@
 
+import Helper
 import Enigma
 
-myconf :: Conf
-myconf = Conf plugs ref_b [rtypeI,rtypeII,rtypeIII] ['A','A','A']
+myConf :: Conf
+myConf = Conf plugs refB [rtypeI,rtypeII,rtypeIII] ['A','A','A']
 
-mystate :: State
-mystate = ['A','A','A']
-
-run :: String -> String
-run = enigma myconf mystate
+myState :: State
+myState = ['A','A','A']
 
 main :: IO ()
 main = do
   msg <- getLine
-  putStrLn (run msg)
+  putStrLn (enigma myConf myState msg)
 
 
