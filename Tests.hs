@@ -3,46 +3,46 @@ import Helper
 import Enigma
 
 -- general tests --------------------------------------------------------------
-aaa_conf = Conf plugs refB [rtypeI,rtypeII,rtypeIII] ['A','A','A']
-aaa_state = ['A','A','A']
+aaaConf = Conf plugs refB [rtypeI,rtypeII,rtypeIII] ['A','A','A']
+aaaState = ['A','A','A']
 
 aaa_test_3A = -- encoding those letter will cause two rotors to rotate
-  (enigma aaa_conf ['A','A','T'] "AAA")
+  (enigma aaaConf ['A','A','T'] "AAA")
   == "BMU"
 
 aaa_test_48A =
-  (enigma aaa_conf aaa_state (take 48 $ repeat 'A'))
+  (enigma aaaConf aaaState (take 48 $ repeat 'A'))
   == "BDZGOWCXLTKSBTMCDLPBMUQOFXYHCXTGYJFLINHNXSHIUNTH"
 
 aaa_test_48A_decode =
-  (enigma aaa_conf aaa_state "BDZGOWCXLTKSBTMCDLPBMUQOFXYHCXTGYJFLINHNXSHIUNTH")
+  (enigma aaaConf aaaState "BDZGOWCXLTKSBTMCDLPBMUQOFXYHCXTGYJFLINHNXSHIUNTH")
   ==
   (take 48 $ repeat 'A')
 
 
 -- rotor test -----------------------------------------------------------------
 rotor_test = (
-  ((rotateRotor 0 aaa_conf)
-  .(rotateRotor 1 aaa_conf)
-  .(rotateRotor 2 aaa_conf)) ['A','A','U']) 
+  ((rotateRotor 0 aaaConf)
+  .(rotateRotor 1 aaaConf)
+  .(rotateRotor 2 aaaConf)) ['A','A','U']) 
   == ['A','A','V']
 
 
 -- detailed tests: encode A at rotor pos AAV using default settings -----------
 rotor2_fwd_test =
-  (rotor Fwd ((get_type aaa_conf) !! 2) ((get_ring aaa_conf) !! 2) 'V' 'A')
+  (rotor Fwd ((getType aaaConf) !! 2) ((getRing aaaConf) !! 2) 'V' 'A')
   ==
   'R'
 
 -- carried forward from rotor2_fwd_test
 rotor1_fwd_test =
-  (rotor Fwd ((get_type aaa_conf) !! 1) ((get_ring aaa_conf) !! 1) 'A' 'R')
+  (rotor Fwd ((getType aaaConf) !! 1) ((getRing aaaConf) !! 1) 'A' 'R')
   ==
   'G'
 
 -- carried forward from rotor1_fwd_test
 rotor0_fwd_test =
-  (rotor Fwd ((get_type aaa_conf) !! 0) ((get_ring aaa_conf) !! 0) 'A' 'G')
+  (rotor Fwd ((getType aaaConf) !! 0) ((getRing aaaConf) !! 0) 'A' 'G')
   ==
   'D'
 
@@ -54,17 +54,17 @@ reflector_test =
 
 -- backwards now..
 rotor0_bwd_test =
-  (rotor Bwd ((get_type aaa_conf) !! 0) ((get_ring aaa_conf) !! 0) 'A' 'H')
+  (rotor Bwd ((getType aaaConf) !! 0) ((getRing aaaConf) !! 0) 'A' 'H')
   ==
   'P'
 
 rotor1_bwd_test =
-  (rotor Bwd ((get_type aaa_conf) !! 1) ((get_ring aaa_conf) !! 1) 'A' 'P')
+  (rotor Bwd ((getType aaaConf) !! 1) ((getRing aaaConf) !! 1) 'A' 'P')
   ==
   'U'
 
 rotor2_bwd_test =
-  (rotor Bwd ((get_type aaa_conf) !! 2) ((get_ring aaa_conf) !! 2) 'V' 'U')
+  (rotor Bwd ((getType aaaConf) !! 2) ((getRing aaaConf) !! 2) 'V' 'U')
   ==
   'M'
 

@@ -5,17 +5,6 @@ import Data.Char (ord, chr, isUpper)
 import Data.Maybe (fromJust)
 import Data.List (elemIndex, nub, delete)
 
-type State = [Char] -- state of the enigma machine
-data Direction = Fwd | Bwd deriving (Show, Eq)
-data RotorSignalDir = SignalIn | SignalOut deriving (Show, Eq)
-data Conf = Conf
-  { get_pb :: String
-  , get_refl :: String
-  , get_type :: [(String, Char)]
-  , get_ring :: [Char]}
-  deriving (Show)
-
-
 -- helper functions -----------------------------------------------------------
 alphs :: [Char]
 alphs = ['A'..'Z']
@@ -48,31 +37,42 @@ cycleList xs a
   | a == last xs = head xs
   | otherwise = xs !! (1 + getIndex a xs)
 
-
--- setting generation functions -----------------------------------------------
-nextSetting :: (Conf,State) -> (Conf,State)
-nextSetting (c,s) = (c,s)
-
--- same as cycleList but for string
-nextReflector :: [String] -> String -> String
-nextReflector rs r = cycleList rs r
-
-nextRingLoc :: String -> String
-nextRingLoc [a] = [cycleChar a]
-nextRingLoc (x:xs)
-  | head xs == 'Z' = cycleChar x : nextRingLoc xs
-  | otherwise = x : nextRingLoc xs
-
--- returns next permutation element for k = 3
-next3Perm:: Eq a => [a] -> [a] -> [a]
-next3Perm all setting =
-  cycleList (kperm 3 all) setting -- currently hardcoded to be 3
-
 -- perform k-permutation
 kperm :: Eq a => Int -> [a] -> [[a]]
 kperm 0 _ = [[]]
 kperm k xs = [x:ys | x <- xs, ys <- kperm (k-1) (delete x xs)]
 
+-- setting generation functions -----------------------------------------------
+-- this function gets the nth setting for using a next* function
+nthElemSetting :: (a -> a) -> Int -> a -> a
+nthElemSetting _ 0 start = start
+nthElemSetting nextfn n start =
+  nthElemSetting nextfn (n-1) (nextfn start)
+
+-- same as cycleList but for string
+-- 2 possibilities
+nextReflector :: [String] -> String -> String
+nextReflector rs r = cycleList rs r
+
+-- get the next location for the ring or the rotor location setting
+-- 26*26*26 17576 possibilities
+nextRingLoc :: String -> String
+nextRingLoc [] = error "empty string in nextRingLoc"
+nextRingLoc [a] = [cycleChar a]
+nextRingLoc (x:xs)
+  | all (== 'Z') xs = cycleChar x : nextRingLoc xs
+  | otherwise = x : nextRingLoc xs
+
+-- returns next permutation element for k = 3
+-- 5!/3! 60 possibilities
+nextRotorType :: Eq a => [a] -> [a] -> [a]
+nextRotorType allSettings setting =
+  cycleList (kperm 3 allSettings) setting -- currently hardcoded to be 3
+
+-- this is used for optional parameter, same as flip fromMaybe
+-- (//) :: Maybe a -> a -> a
+-- Just x // _ = x
+-- Nothing // y = y
 
 -- verification functions -----------------------------------------------------
 verifyInput :: String -> Bool

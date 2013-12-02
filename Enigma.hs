@@ -3,11 +3,21 @@ module Enigma where
 
 import Helper
 
+type State = [Char] -- state of the enigma machine
+data Direction = Fwd | Bwd deriving (Show, Eq)
+data RotorSignalDir = SignalIn | SignalOut deriving (Show, Eq)
+data Conf = Conf
+  { getPlugboard :: String
+  , getRefl :: String
+  , getType :: [(String, Char)]
+  , getRing :: [Char]}
+  deriving (Show)
+
 -- enigma machine functions ---------------------------------------------------
 -- this is for re-routing the signal to a different character
 plugboard :: Direction -> String -> Char -> Char
-plugboard Bwd pb_conf c = alphs !! (getIndex c pb_conf)
-plugboard Fwd pb_conf c = pb_conf !! (charToInt c)
+plugboard Bwd pbConf c = alphs !! (getIndex c pbConf)
+plugboard Fwd pbConf c = pbConf !! (charToInt c)
 
 -- rotates a single rotor depending on the state and its configuration
 rotateRotor :: Int -> Conf -> State -> State
@@ -18,7 +28,7 @@ rotateRotor x conf state
   | otherwise = state
   where
     (part1,_:part2) = splitAt x state
-    pawlLoc = snd (get_type conf !! (x+1))
+    pawlLoc = snd (getType conf !! (x+1))
     rightLoc = state !! (x+1)
     currentLoc = state !! x
 
@@ -57,27 +67,44 @@ rotorWiring Bwd (wiring,_) c =
 -- this does not change the machine state
 enigmaChar :: Conf -> State -> Char -> Char
 enigmaChar conf state c =
-  ( plugboard Bwd (get_pb conf)
-     . rotor Bwd ((get_type conf) !! 2) ((get_ring conf) !! 2) (state !! 2)
-     . rotor Bwd ((get_type conf) !! 1) ((get_ring conf) !! 1) (state !! 1)
-     . rotor Bwd ((get_type conf) !! 0) ((get_ring conf) !! 0) (state !! 0)
-     . reflector (get_refl conf)
-     . rotor Fwd ((get_type conf) !! 0) ((get_ring conf) !! 0) (state !! 0)
-     . rotor Fwd ((get_type conf) !! 1) ((get_ring conf) !! 1) (state !! 1)
-     . rotor Fwd ((get_type conf) !! 2) ((get_ring conf) !! 2) (state !! 2)
-     . plugboard Fwd (get_pb conf)
+  ( plugboard Bwd (getPlugboard conf)
+     . rotor Bwd ((getType conf) !! 2) ((getRing conf) !! 2) (state !! 2)
+     . rotor Bwd ((getType conf) !! 1) ((getRing conf) !! 1) (state !! 1)
+     . rotor Bwd ((getType conf) !! 0) ((getRing conf) !! 0) (state !! 0)
+     . reflector (getRefl conf)
+     . rotor Fwd ((getType conf) !! 0) ((getRing conf) !! 0) (state !! 0)
+     . rotor Fwd ((getType conf) !! 1) ((getRing conf) !! 1) (state !! 1)
+     . rotor Fwd ((getType conf) !! 2) ((getRing conf) !! 2) (state !! 2)
+     . plugboard Fwd (getPlugboard conf)
   ) c
 
 -- runs the enigma machine for a string
 enigma :: Conf -> State -> String -> String
 enigma _ _ [] = []
 enigma conf state (x:rest) =
-  let new_state =
+  let newState =
         ((rotateRotor 0 conf)
         .(rotateRotor 1 conf)
         .(rotateRotor 2 conf)) state
-  in (enigmaChar conf new_state x) : (enigma conf new_state rest)
+  in (enigmaChar conf newState x) : (enigma conf newState rest)
 
+
+-- at the moment we're not including plugboard settings
+intToSetting :: (Conf,State) -> [(String, Char)] -> [String] -> Int -> (Conf,State)
+intToSetting (conf,state) allRTypes allReflectors n =
+  (Conf newPlugs newRefl newRType newRing, newState)
+  where
+    newPlugs = getPlugboard conf -- not considered at the moment
+    newRefl = nthElemSetting (nextReflector allReflectors) (m `quot` 18534946560) (getRefl conf)
+    newRType = nthElemSetting (nextRotorType allRTypes) (m `quot` 308915776) (getType conf)
+    newRing = nthElemSetting nextRingLoc (m `quot` 17576) (getRing conf)
+    newState = nthElemSetting nextRingLoc (m `rem` 17576) state
+    m = n `rem` 37069893120 -- (26^3 * 26^3 * 60 * 2) plugs not included
+
+intToSettingDefault :: Int -> (Conf, State)
+intToSettingDefault =
+  intToSetting (Conf plugs refB [rtypeI,rtypeII,rtypeIII] "AAA", "AAA")
+    [rtypeI, rtypeII, rtypeIII, rtypeIV, rtypeV] [refB, refC]
 
 -- some default configurations
 plugs = ['A'..'Z'] -- plug locations, only wires in real enigma

@@ -20,7 +20,10 @@ Enigma Process
 11. Pass through plugboard
 
 
-todo: improve rotor function
-      add validation functions
+TODO:
+take integer key as input
+better validation functions
+automated testing
+random key generation
 
 
