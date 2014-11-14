@@ -1,4 +1,7 @@
+WFLAGS=-Wall
+
 all:
-	ghc -Wall Main.hs
+	ghc --make $(WFLAGS) Main.hs
+	ghc Tests.hs
 clean:
 	rm -rf *.o *.hi Main

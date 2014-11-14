@@ -2,6 +2,7 @@ dist
 cabal-dev
 main
 Main
+Tests
 *.o
 *.hi
 *.chi
