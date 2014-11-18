@@ -16,8 +16,8 @@ data Conf = Conf
 -- enigma machine functions ---------------------------------------------------
 -- this is for re-routing the signal to a different character
 plugboard :: Direction -> String -> Char -> Char
-plugboard Bwd pbConf c = alphs !! (getIndex c pbConf)
-plugboard Fwd pbConf c = pbConf !! (charToInt c)
+plugboard Bwd pbConf c = alphs !! getIndex c pbConf
+plugboard Fwd pbConf c = pbConf !! charToInt c
 
 -- rotates a single rotor depending on the state and its configuration
 rotateRotor :: Int -> Conf -> State -> State
@@ -34,16 +34,16 @@ rotateRotor x conf state
 
 -- like the plugboard, also for re-routing the signal
 reflector :: String -> Char -> Char
-reflector refConf c = plugboard Bwd refConf c
+reflector = plugboard Bwd
 
 -- encodes a single character using a single rotor,
 -- depends on the signal direction, rotor type, ring setting,
 -- rotor location and of course the input character respectively
 rotor :: Direction -> (String,Char) -> Char -> Char -> Char -> Char
-rotor dir rtype ring loc c = -- where rtype is rotor type
+rotor dir rtype ring loc = -- where rtype is rotor type
     ((rotorOffset SignalOut ring loc)
     .(rotorWiring dir rtype)
-    .(rotorOffset SignalIn ring loc)) c
+    .(rotorOffset SignalIn ring loc))
 
 -- helper function for rotor: performs the offset
 rotorOffset :: RotorSignalDir -> Char -> Char -> Char -> Char
@@ -82,15 +82,16 @@ enigma :: Conf -> State -> String -> String
 enigma _ _ [] = []
 enigma conf state (x:rest) =
     let newState =
-                ((rotateRotor 0 conf)
-                .(rotateRotor 1 conf)
-                .(rotateRotor 2 conf)) state
+            ((rotateRotor 0 conf)
+            . (rotateRotor 1 conf)
+            . (rotateRotor 2 conf)) state
     in (enigmaChar conf newState x) : (enigma conf newState rest)
 
-
 -- at the moment we're not including plugboard settings
-intToSetting :: (Conf,State) -> [(String, Char)] -> [String] -> Int -> (Conf,State)
-intToSetting (conf,state) allRTypes allReflectors n =
+intToSetting :: (Conf,State) -> [(String, Char)] -> [String] -> Integer -> (Conf,State)
+intToSetting (conf,state) allRTypes allReflectors n
+    | n < 0 = error "4th input (n) cannot be negative"
+    | otherwise =
     (Conf newPlugs newRefl newRType newRing, newState)
     where
         newPlugs = getPlugboard conf -- not considered at the moment
@@ -100,7 +101,7 @@ intToSetting (conf,state) allRTypes allReflectors n =
         newState = nthElemSetting nextRingLoc (m `rem` 17576) state
         m = n `rem` 37069893120 -- (26^3 * 26^3 * 60 * 2) plugs not included
 
-intToSettingDefault :: Int -> (Conf, State)
+intToSettingDefault :: Integer -> (Conf, State)
 intToSettingDefault =
     intToSetting (Conf plugs refB [rtypeI,rtypeII,rtypeIII] "AAA", "AAA")
         [rtypeI, rtypeII, rtypeIII, rtypeIV, rtypeV] [refB, refC]

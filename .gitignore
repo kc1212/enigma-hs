@@ -3,8 +3,15 @@ cabal-dev
 main
 Main
 Tests
+main
+enigma
+tests
+
 *.o
 *.hi
 *.chi
 *.chs.h
 .virthualenv
+tags
+
+

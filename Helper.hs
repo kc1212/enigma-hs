@@ -2,7 +2,7 @@
 module Helper where
 
 import Data.Char (ord, chr, isAsciiUpper)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromMaybe)
 import Data.List (elemIndex, nub, delete)
 
 -- helper functions -----------------------------------------------------------
@@ -23,7 +23,9 @@ intToChar x
     | otherwise = error "Argument is not between 0 and 25 in intToChar."
 
 getIndex :: Eq a => a -> [a] -> Int
-getIndex x xs = fromJust $ elemIndex x xs
+getIndex x xs =
+		let index = elemIndex x xs
+		in fromMaybe (error "Critical Error.") index
 
 cycleChar :: Char -> Char
 cycleChar c
@@ -44,7 +46,7 @@ kperm k xs = [x:ys | x <- xs, ys <- kperm (k-1) (delete x xs)]
 
 -- setting generation functions -----------------------------------------------
 -- this function gets the nth setting for using a next* function
-nthElemSetting :: (a -> a) -> Int -> a -> a
+nthElemSetting :: (a -> a) -> Integer -> a -> a
 nthElemSetting _ 0 start = start
 nthElemSetting nextfn n start =
     nthElemSetting nextfn (n-1) (nextfn start)
