@@ -1,8 +1,8 @@
 Enigma machine emulator written in Haskell to practice and for fun.
 
-To run the program:
-    make
-    echo "IDPHRIUSHJ" | ./Main
+To build and run:
+    cabal build
+    echo "IDPHRIUSHJ" | ./dist/build/enigma-hs/enigma-hs
 
 feel free to change the settings in Main.hs
 
@@ -18,12 +18,5 @@ Enigma Process
  9. Pass through middle wheel
 10. Pass through right-hand wheel
 11. Pass through plugboard
-
-
-TODO:
-take integer key as input
-better validation functions
-automated testing
-random key generation
 
 

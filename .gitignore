@@ -1,17 +1,18 @@
 dist
 cabal-dev
-main
-Main
-Tests
-main
-enigma
-tests
+enigma-hs
+enigma-tests
 
 *.o
 *.hi
 *.chi
 *.chs.h
 .virthualenv
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+cabal.config
 tags
 
 
