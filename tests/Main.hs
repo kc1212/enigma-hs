@@ -1,5 +1,5 @@
 
-import Enigma
+import Crypto.Enigma
 
 confs :: (Conf, State)
 confs = intToSettingDefault 0

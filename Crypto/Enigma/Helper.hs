@@ -1,5 +1,5 @@
 
-module Helper where
+module Crypto.Enigma.Helper where
 
 import Data.Char (ord, chr, isAsciiUpper)
 import Data.Maybe (fromMaybe)

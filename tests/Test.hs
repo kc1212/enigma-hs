@@ -1,5 +1,5 @@
 
-import Enigma
+import Crypto.Enigma
 import System.Exit (exitFailure, exitSuccess)
 
 -- general tests --------------------------------------------------------------

@@ -1,7 +1,7 @@
 
-module Enigma where
+module Crypto.Enigma where
 
-import Helper
+import Crypto.Enigma.Helper
 
 type State = [Char] -- state of the enigma machine
 data Direction = Fwd | Bwd deriving (Show, Eq)
