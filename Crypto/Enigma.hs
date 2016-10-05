@@ -2,6 +2,7 @@
 module Crypto.Enigma where
 
 import Crypto.Enigma.Helper
+import Test.QuickCheck (Arbitrary(..), elements, shuffle, vectorOf)
 
 type State = [Char] -- state of the enigma machine
 data Direction = Fwd | Bwd deriving (Show, Eq)
@@ -12,6 +13,13 @@ data Conf = Conf
     , getType :: [(String, Char)]
     , getRing :: [Char]}
     deriving (Show)
+
+instance Arbitrary Conf where
+    arbitrary =
+        Conf <$> return plugs
+             <*> elements [refB, refC]
+             <*> (fmap (take 3) $ shuffle [rtypeI, rtypeII, rtypeIII, rtypeIV, rtypeV])
+             <*> vectorOf 3 (elements plugs)
 
 -- enigma machine functions ---------------------------------------------------
 -- this is for re-routing the signal to a different character
