@@ -3,7 +3,9 @@ import Crypto.Enigma
 import System.Exit (exitFailure, exitSuccess)
 import Test.QuickCheck (Arbitrary(..), Property, Result(..),
                         quickCheckResult,
-                        listOf1, choose, (===))
+                        choose, elements,
+                        listOf1, shuffle,
+                        vectorOf, (===))
 
 -- general tests --------------------------------------------------------------
 aaaConf :: Conf
@@ -87,6 +89,24 @@ manualTests = and
     , rotor2BwdTest
     ]
 
+
+newtype TestConf = TestConf Conf deriving (Show)
+
+instance Arbitrary TestConf where
+    arbitrary = do
+        let rotors = take 3 <$> shuffle [ rtypeI
+                                        , rtypeII
+                                        , rtypeIII
+                                        , rtypeIV
+                                        , rtypeV ]
+
+        conf <- Conf <$> return plugs
+                     <*> elements [refB, refC]
+                     <*> rotors
+                     <*> vectorOf 3 (elements plugs)
+
+        return . TestConf $ conf
+
 -- | Used to satisfy the precondition that messages must consist of
 -- capital Chars only.
 newtype TestMsg = TestMsg String deriving (Show)
@@ -94,16 +114,16 @@ instance Arbitrary TestMsg where
     arbitrary = TestMsg <$> listOf1 (choose ('A','Z'))
 
 -- | A message encoded two times is the original message.
-prop_reversible :: Conf -> TestMsg -> Property
-prop_reversible conf (TestMsg msg) =
+prop_reversible :: TestConf -> TestMsg -> Property
+prop_reversible (TestConf conf) (TestMsg msg) =
     let state = getRing conf
     in (msg === enigma conf state (enigma conf state msg))
 
 main :: IO ()
 main = do
     result <- quickCheckResult prop_reversible
-    if manualTests && (isSuccess result) then exitSuccess else exitFailure
+    if manualTests && isSuccess result then exitSuccess else exitFailure
 
 isSuccess :: Result -> Bool
-isSuccess (Success {}) = True
+isSuccess Success {} = True
 isSuccess _ = False
