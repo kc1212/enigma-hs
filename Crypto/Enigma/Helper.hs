@@ -24,8 +24,8 @@ intToChar x
 
 getIndex :: Eq a => a -> [a] -> Int
 getIndex x xs =
-		let index = elemIndex x xs
-		in fromMaybe (error "Critical Error.") index
+    let index = elemIndex x xs
+    in fromMaybe (error "Critical Error.") index
 
 cycleChar :: Char -> Char
 cycleChar c

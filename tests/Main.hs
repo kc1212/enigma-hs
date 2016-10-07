@@ -1,12 +1,12 @@
 
 import Crypto.Enigma
 
-confs :: (Conf, State)
-confs = intToSettingDefault 0
 
 main :: IO ()
 main = do
     msg <- getLine
-    putStrLn $ enigma (fst confs) (snd confs) msg
+    putStrLn $ enigma conf state msg
+    where
+      (conf, state) = intToSettingDefault 0
 
 

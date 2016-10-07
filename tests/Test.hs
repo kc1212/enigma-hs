@@ -1,6 +1,11 @@
 
 import Crypto.Enigma
 import System.Exit (exitFailure, exitSuccess)
+import Test.QuickCheck (Arbitrary(..), Property, Result(..),
+                        quickCheckResult,
+                        choose, elements,
+                        listOf1, shuffle,
+                        vectorOf, (===))
 
 -- general tests --------------------------------------------------------------
 aaaConf :: Conf
@@ -69,20 +74,56 @@ rotor2BwdTest =
     (rotor Bwd ((getType aaaConf) !! 2) ((getRing aaaConf) !! 2) 'V' 'U')
     == 'M'
 
-runTest :: Bool
-runTest =
-    aaaTest3A &&
-    aaaTest48A &&
-    aaaTest48ADecode &&
-    rotorTest &&
-    rotor2FwdTest &&
-    rotor1FwdTest &&
-    rotor0FwdTest &&
-    reflectorTest &&
-    rotor0BwdTest &&
-    rotor1BwdTest &&
-    rotor2BwdTest
+manualTests :: Bool
+manualTests = and
+    [ aaaTest3A
+    , aaaTest48A
+    , aaaTest48ADecode
+    , rotorTest
+    , rotor2FwdTest
+    , rotor1FwdTest
+    , rotor0FwdTest
+    , reflectorTest
+    , rotor0BwdTest
+    , rotor1BwdTest
+    , rotor2BwdTest
+    ]
 
-main = if runTest then exitSuccess else exitFailure
 
+newtype TestConf = TestConf Conf deriving (Show)
 
+instance Arbitrary TestConf where
+    arbitrary = do
+        let rotors = take 3 <$> shuffle [ rtypeI
+                                        , rtypeII
+                                        , rtypeIII
+                                        , rtypeIV
+                                        , rtypeV ]
+
+        conf <- Conf <$> return plugs
+                     <*> elements [refB, refC]
+                     <*> rotors
+                     <*> vectorOf 3 (elements plugs)
+
+        return . TestConf $ conf
+
+-- | Used to satisfy the precondition that messages must consist of
+-- capital Chars only.
+newtype TestMsg = TestMsg String deriving (Show)
+instance Arbitrary TestMsg where
+    arbitrary = TestMsg <$> listOf1 (choose ('A','Z'))
+
+-- | A message encoded two times is the original message.
+prop_reversible :: TestConf -> TestMsg -> Property
+prop_reversible (TestConf conf) (TestMsg msg) =
+    let state = getRing conf
+    in (msg === enigma conf state (enigma conf state msg))
+
+main :: IO ()
+main = do
+    result <- quickCheckResult prop_reversible
+    if manualTests && isSuccess result then exitSuccess else exitFailure
+
+isSuccess :: Result -> Bool
+isSuccess Success {} = True
+isSuccess _ = False
