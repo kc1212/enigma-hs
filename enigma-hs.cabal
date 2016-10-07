@@ -31,7 +31,7 @@ executable enigma-hs
   -- other-extensions:
   build-depends:       base >=4.6,
                        enigma-hs
-  hs-source-dirs:      tests
+  hs-source-dirs:      bin
   default-language:    Haskell2010
 
 test-suite tests
